@@ -24,6 +24,7 @@
 #include "bluemix.h"
 #include "device.h"
 #include "tcp.h"
+#include "sensorhub.h"
 
 #define FOTA_STACK_SIZE 3840
 char fota_thread_stack[FOTA_STACK_SIZE];
@@ -365,6 +366,10 @@ void main(void)
 		TC_END_REPORT(TC_FAIL);
 		return;
 	}
+
+#if CONFIG_SENSORHUB_SUPPORT
+	sensorhub_init();
+#endif
 
 	TC_PRINT("Starting the FOTA Service\n");
 	k_thread_spawn(&fota_thread_stack[0], FOTA_STACK_SIZE,

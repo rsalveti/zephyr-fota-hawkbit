@@ -20,4 +20,6 @@
 
 #define CONFIG_BLUEMIX_ORG		"mstsez"
 
+#define CONFIG_SENSORHUB_SUPPORT	1
+
 #endif /* __FOTA_CONFIG_H_ */
