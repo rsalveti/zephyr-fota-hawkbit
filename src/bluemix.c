@@ -24,6 +24,7 @@
 #include "device.h"
 #include "tcp.h"
 #include "bluemix.h"
+#include "sensorhub.h"
 
 #define BLUEMIX_USERNAME	"use-token-auth"
 #define APP_CONNECT_TRIES	10
@@ -366,15 +367,25 @@ int bluemix_fini(struct bluemix_ctx *ctx)
 
 int bluemix_pub_temp_c(struct bluemix_ctx *ctx, int temperature)
 {
+	char *tmp;
 	struct mqtt_publish_msg *pub_msg = &ctx->pub_msg;
 	INIT_DEVICE_TOPIC(ctx, "iot-2/type/%s/id/%s/evt/status/fmt/json");
 	snprintf(ctx->bm_message, sizeof(ctx->bm_message),
-		"{"
-			"\"d\":{"
-				"\"temperature\":%d"
-			"}"
-		"}",
-		temperature);
+			"{\"d\":{\"mcutemp\":%d", temperature);
+#if CONFIG_SENSORHUB_SUPPORT
+	/* Assume humidity = 0 as invalid data */
+	if (shub_humidity) {
+		/* TODO: Check buffer len size */
+		tmp = ctx->bm_message + strlen(ctx->bm_message);
+		snprintf(tmp,
+			 sizeof(ctx->bm_message) - strlen(ctx->bm_message),
+			 ",\"temperature\":%d,\"humidity\":%d",
+			 shub_temp, shub_humidity);
+	}
+#endif
+	tmp = ctx->bm_message + strlen(ctx->bm_message);
+	snprintf(tmp, sizeof(ctx->bm_message) - strlen(ctx->bm_message), "}}");
+
 	pub_msg->msg = ctx->bm_message;
 	pub_msg->msg_len = strlen(pub_msg->msg);
 	pub_msg->qos = MQTT_QoS0;
